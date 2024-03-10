@@ -1,0 +1,49 @@
+[Data]
+patch_x = 128
+patch_y = 128
+data_name = MoNuSeg
+data_branch = seg
+aug_num = 1
+data_path = ../../../medical_data/Gland/MoNuSeg
+
+[Network]
+model = lightdsdfanet
+train_branch = seg
+classes = 3
+backbone = resnet34
+ema_decay=0
+
+
+[Save]
+save_dir = ../../log/${Data:data_name}_${Data:data_branch}/${Network:model}/budget_${Run:nb_active_learning_iter}/seg_${Run:gpu}_run_${Run:run_num}
+save_model_path = ${save_dir}/checkpoint
+config_file = ${save_dir}/configuration.txt
+load_dir = ${Save:save_dir}
+load_model_path = ${load_dir}/checkpoint
+tmp_dir = ${save_dir}/tmp
+tensorboard_dir = ${save_dir}/tensorboard
+submission_dir = ${load_dir}/submissions
+log_file = ${save_dir}/train_log.txt
+
+[Optimizer]
+learning_algorithm = adam
+learning_rate = 2.5e-4
+epsilon = 1e-12
+min_lrate = 1e-8
+clip = 4.0
+
+[Run]
+n_epochs = 300
+train_seg_batch_size = 16
+test_seg_batch_size = 1
+update_every = 4
+gpu = 0
+run_num = ${Network:backbone}_DC_0
+workers = 4
+printfreq = 1
+gpu_count = 0
+load_best_epoch = True
+default_seg_label_size = 1728
+nb_active_learning_iter = 1
+patience = 50
+
