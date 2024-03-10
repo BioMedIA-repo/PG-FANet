@@ -47,7 +47,7 @@ If the code is helpful for your research, please consider citing:
 
 ## Social media
 
-<p align="center"><img width="100" alt="image" src="results/wechat.png"></p> 
+<p align="center"><img width="400" alt="image" src="results/wechat.png"></p> 
 Welcome to follow our [Wechat official account: iBioMedInfo] and [Xiaohongshu official account: iBioMedInfo], we will share recent studies on biomedical image and bioinformation analysis there.
 
 ### Global Collaboration & Questions
