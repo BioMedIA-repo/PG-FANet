@@ -151,83 +151,24 @@ def train_semi_mse(seg_help, train_loader, unlabelled_loader, optimizer, epoch, 
         images, labels, _ = next(labeled_train_iter)
         images_un, labels_un, _ = next(unlabeled_train_iter)
         images_un_noise = transforms_for_noise(images_un, 0.5, seg_help.device)
-        if args.random_noise:
-            if args.inter and args.intra:
-                if random.random() > 0.5:
-                    logits_un, out_list_un = seg_help.model(images_un_noise, has_dropout=True, random_noise=True)
-                    with torch.no_grad():
-                        logits_un_ema, out_list_un_ema = seg_help.ema.model(images_un)
-                else:
-                    logits_un, out_list_un = seg_help.model(images_un, has_dropout=True, random_noise=True)
-                    with torch.no_grad():
-                        logits_un_ema, out_list_un_ema = seg_help.ema.model(images_un_noise)
-            elif args.inter:
-                if random.random() > 0.5:
-                    logits_un, out_list_un = seg_help.model(images_un_noise)
-                    with torch.no_grad():
-                        logits_un_ema, out_list_un_ema = seg_help.ema.model(images_un)
-                else:
-                    logits_un, out_list_un = seg_help.model(images_un)
-                    with torch.no_grad():
-                        logits_un_ema, out_list_un_ema = seg_help.ema.model(images_un_noise)
-            elif args.intra:
-                logits_un, out_list_un = seg_help.model(images_un, has_dropout=True, random_noise=True)
-                with torch.no_grad():
-                    logits_un_ema, out_list_un_ema = seg_help.ema.model(images_un)
-            else:
-                logits_un, out_list_un = seg_help.model(images_un)
-                with torch.no_grad():
-                    logits_un_ema, out_list_un_ema = seg_help.ema.model(images_un)
-        else:
-            if args.inter and args.intra:
-                logits_un, out_list_un = seg_help.model(images_un_noise, has_dropout=True, random_noise=True)
-            elif args.inter:
-                logits_un, out_list_un = seg_help.model(images_un_noise)
-            elif args.intra:
-                logits_un, out_list_un = seg_help.model(images_un, has_dropout=True, random_noise=True)
-            else:
-                logits_un, out_list_un = seg_help.model(images_un)
+        if random.random() > 0.5:
+            logits_un, out_list_un = seg_help.model(images_un_noise, has_dropout=True, random_noise=True)
             with torch.no_grad():
                 logits_un_ema, out_list_un_ema = seg_help.ema.model(images_un)
+        else:
+            logits_un, out_list_un = seg_help.model(images_un, has_dropout=True, random_noise=True)
+            with torch.no_grad():
+                logits_un_ema, out_list_un_ema = seg_help.ema.model(images_un_noise)
         # S7
         # consistency_dist = softmax_mse_loss(logits_un, logits_un_ema)
         # consistency_dist = softmax_inter_extreme_lr_mse_loss(logits_un, out_list_un[1], logits_un_ema)
         # consistency_dist = softmax_extreme_lr_mse_loss(logits_un, out_list_un[1], logits_un_ema)
-        if args.inter and args.intra and args.shape:
-            if args.mask:
-                # Inter T, Intra T, Shape T
-                if args.KL:
-                    consistency_dist = softmax_aug_msketp_lr_kl_loss(logits_un, out_list_un[1], logits_un_ema)
-                else:
-                    consistency_dist = softmax_aug_msketp_lr_mse_loss(logits_un, out_list_un[1], logits_un_ema)
-            else:
-                # Inter T, Intra T, Shape T
-                if args.KL:
-                    consistency_dist = softmax_aug_etp_lr_kl_loss(logits_un, out_list_un[1], logits_un_ema)
-                else:
-                    consistency_dist = softmax_aug_etp_lr_mse_loss(logits_un, out_list_un[1], logits_un_ema)
-        elif args.inter and args.intra and (not args.shape):
-            # Inter T, Intra T, Shape F
-            if args.KL:
-                consistency_dist = softmax_aug_lr_kl_loss(logits_un, out_list_un[1], logits_un_ema)
-            else:
-                consistency_dist = softmax_aug_lr_mse_loss(logits_un, out_list_un[1], logits_un_ema)
-        elif args.inter and (not args.intra) and (not args.shape):
-            # Inter T, Intra F, Shape F
-            consistency_dist = softmax_lr_mse_loss(logits_un, logits_un_ema)
-        elif (not args.inter) and args.intra and (not args.shape):
-            # Inter F, Intra T, Shape F
-            if args.KL:
-                consistency_dist = softmax_aug_kl_loss(logits_un, out_list_un[1], logits_un_ema)
-            else:
-                consistency_dist = softmax_aug_mse_loss(logits_un, out_list_un[1], logits_un_ema)
-        elif (not args.inter) and (not args.intra) and args.shape:
-            # Inter F, Intra F, Shape T
-            # consistency_dist = softmax_etp_mse_loss(logits_un, logits_un_ema)
-            consistency_dist = softmax_mask_etp_mse_loss(logits_un, logits_un_ema)
+        if args.mask:
+            # Inter T, Intra T, Shape T
+            consistency_dist = softmax_aug_msketp_lr_mse_loss(logits_un, out_list_un[1], logits_un_ema)
         else:
-            # Inter F, Intra F, Shape F
-            consistency_dist = softmax_mse_loss(logits_un, logits_un_ema)
+            # Inter T, Intra T, Shape T
+            consistency_dist = softmax_aug_etp_lr_mse_loss(logits_un, out_list_un[1], logits_un_ema)
 
         consistency_dist = torch.mean(consistency_dist)
 
